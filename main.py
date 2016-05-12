@@ -30,4 +30,6 @@ if __name__ == '__main__':
         models.db.create_all()
         data.create_all()
     else:
+    	if app.config.get("CREATE_DB", False):
+    		models.db.create_all()
         app.run(host='0.0.0.0', debug=True, port=app.config.get('PORT', 9999))

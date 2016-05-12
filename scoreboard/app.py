@@ -19,14 +19,17 @@ from werkzeug import exceptions
 
 from scoreboard import logger
 
+from flask_appconfig.env import from_envvars
+
 app = flask.Flask(
         'scoreboard',
         static_folder='../static',
         template_folder='../templates',
         )
+
 app.config.from_object('scoreboard.config_defaults.Defaults')
 app.config.from_object('config')  # Load from config.py
-
+from_envvars(app.config, prefix=app.name.upper() + '_')
 
 def on_appengine():
     """Returns true if we're running on AppEngine."""
@@ -34,13 +37,12 @@ def on_appengine():
     return (runtime.startswith('Development/') or
             runtime.startswith('Google App Engine/'))
 
-
 log_formatter = logger.Formatter(
         '%(asctime)s %(levelname)8s [%(filename)s:%(lineno)d] %(client)s %(message)s')
 # log to files unless on AppEngine
 if not on_appengine():
     # Main logger
-    if not app.debug:
+    if not app.debug and not app.config.get("LOG_TO_STDOUT", False):
         handler = logging.FileHandler(
             app.config.get('LOGFILE', '/tmp/scoreboard.wsgi.log'))
         handler.setLevel(logging.INFO)
@@ -50,13 +52,16 @@ if not on_appengine():
         app.logger.handlers[0].setFormatter(log_formatter)
 
     # Challenge logger
-    handler = logging.FileHandler(
-        app.config.get('CHALLENGELOG', '/tmp/scoreboard.challenge.log'))
-    handler.setLevel(logging.INFO)
-    handler.setFormatter(logger.Formatter('%(asctime)s %(client)s %(message)s'))
-    logger = logging.getLogger('scoreboard')
-    logger.addHandler(handler)
-    app.challenge_log = logger
+    if not app.config.get("LOG_TO_STDOUT", False):
+        handler = logging.FileHandler(
+            app.config.get('CHALLENGELOG', '/tmp/scoreboard.challenge.log'))
+        handler.setLevel(logging.INFO)
+        handler.setFormatter(logger.Formatter('%(asctime)s %(client)s %(message)s'))
+        logger = logging.getLogger('scoreboard')
+        logger.addHandler(handler)
+        app.challenge_log = logger
+    else:
+        app.challenge_log = app.logger
 else:
     app.challenge_log = app.logger
     app.logger.handlers[0].setFormatter(log_formatter)

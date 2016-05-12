@@ -1,6 +1,7 @@
 Flask
 Flask-RESTful
 Flask-SQLAlchemy
+flask-appconfig
 Jinja2
 MarkupSafe
 SQLAlchemy
