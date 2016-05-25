@@ -1,0 +1,19 @@
+version: "2"
+services:
+  mysql:
+    image: mysql
+    environment: 
+      - MYSQL_ROOT_PASSWORD=foobarbaz
+      - MYSQL_DATABASE=ctf
+      - MYSQL_USER=ctf
+      - MYSQL_PASSWORD=ctf
+    env_file: .env
+
+  scoreboard:
+    extends:
+      file: docker-compose.yml
+      service: scoreboard 
+    environment:
+      - WAIT_DB=30
+      - SCOREBOARD_SQLALCHEMY_DATABASE_URI=mysql://ctf:ctf@mysql/ctf
+
