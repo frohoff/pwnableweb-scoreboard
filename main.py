@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sys
+from time import sleep
 
 from scoreboard.app import app
 from scoreboard import models
@@ -23,13 +24,29 @@ from scoreboard import views
 modules_for_views = (rest, views)
 
 if __name__ == '__main__':
-    if 'createdb' in sys.argv:
+    if 'checkdb' in sys.argv:
+        print("checking for db")
+        models.db.engine.connect().close()
+    elif 'waitdb' in sys.argv:
+        print("waiting for db")
+        timeout = int(sys.argv[2] or "5")
+        while True:
+          try:
+            print("checking for db")
+            models.db.engine.connect().close()
+            break
+          except Exception: 
+            if timeout <= 0:
+              raise
+            else:
+              time.sleep(1)
+    elif 'createdb' in sys.argv:
+        print("creating db")
         models.db.create_all()
     elif 'createdata' in sys.argv:
+        print("creating db and data")
         from scoreboard.tests import data
         models.db.create_all()
         data.create_all()
     else:
-    	if app.config.get("CREATE_DB", False):
-    		models.db.create_all()
         app.run(host='0.0.0.0', debug=True, port=app.config.get('PORT', 9999))

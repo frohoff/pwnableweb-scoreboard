@@ -45,7 +45,7 @@ if not on_appengine():
     if not app.debug and not app.config.get("LOG_TO_STDOUT", False):
         handler = logging.FileHandler(
             app.config.get('LOGFILE', '/tmp/scoreboard.wsgi.log'))
-        handler.setLevel(logging.INFO)
+        handler.setLevel(logging.DEBUG)
         handler.setFormatter(log_formatter)
         app.logger.addHandler(handler)
     else:
@@ -55,7 +55,7 @@ if not on_appengine():
     if not app.config.get("LOG_TO_STDOUT", False):
         handler = logging.FileHandler(
             app.config.get('CHALLENGELOG', '/tmp/scoreboard.challenge.log'))
-        handler.setLevel(logging.INFO)
+        handler.setLevel(logging.DEBUG)
         handler.setFormatter(logger.Formatter('%(asctime)s %(client)s %(message)s'))
         logger = logging.getLogger('scoreboard')
         logger.addHandler(handler)
@@ -64,8 +64,13 @@ if not on_appengine():
         app.challenge_log = app.logger
 else:
     app.challenge_log = app.logger
-    app.logger.handlers[0].setFormatter(log_formatter)
-    logging.getLogger().handlers[0].setFormatter(log_formatter)
+    if not app.logger.handlers and not logging.getLogger().handlers:
+        print("adding handlers", sys.stderr)
+        app.logger.addHandler(logging.StreamHandler())
+        logging.getLogger().addHandler(logging.StreamHandler())
+    # TODO fix old appengine code here
+    #app.logger.handlers[0].setFormatter(log_formatter)
+    #logging.getLogger().handlers[0].setFormatter(log_formatter)
 
 
 # Install a default error handler
