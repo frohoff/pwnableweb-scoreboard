@@ -13,8 +13,7 @@
 # limitations under the License.
 
 import sys
-from time import sleep
-
+import time
 from scoreboard.app import app
 from scoreboard import models
 from scoreboard import rest
@@ -29,14 +28,14 @@ if __name__ == '__main__':
         models.db.engine.connect().close()
     elif 'waitdb' in sys.argv:
         print("waiting for db")
-        timeout = int(sys.argv[2] or "5")
+        timeout = int(sys.argv[2] or "5") + time.time()
         while True:
           try:
             print("checking for db")
             models.db.engine.connect().close()
             break
-          except Exception: 
-            if timeout <= 0:
+          except Exception: # TODO narrow this
+            if time.time() >= timeout:
               raise
             else:
               time.sleep(1)
